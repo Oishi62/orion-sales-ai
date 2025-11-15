@@ -1,0 +1,30 @@
+{
+  "name": "salesai-monorepo",
+  "version": "1.0.0",
+  "description": "Sales AI application with Neo-Tech Noir theme",
+  "main": "backend/server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && cross-env BROWSER=none npm start",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "install-deps": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "sales",
+    "ai",
+    "react",
+    "express",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "pdf-poppler": "^0.2.3"
+  }
+}
