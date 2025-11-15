@@ -21,19 +21,6 @@ const agentSchema = new mongoose.Schema({
       required: [true, 'Agent description is required'],
       trim: true,
       maxlength: [1000, 'Agent description cannot exceed 1000 characters']
-    },
-    frequency: {
-      value: {
-        type: Number,
-        required: [true, 'Frequency value is required'],
-        min: [1, 'Frequency value must be at least 1'],
-        max: [5, 'Frequency value cannot exceed 5']
-      },
-      unit: {
-        type: String,
-        required: [true, 'Frequency unit is required'],
-        enum: ['days', 'weeks', 'months']
-      }
     }
   },
 
@@ -187,6 +174,13 @@ const agentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
       }
+    },
+    
+    // Messaging Style (optional)
+    messagingStyle: {
+      type: String,
+      trim: true,
+      maxlength: [2000, 'Messaging style cannot exceed 2000 characters']
     }
   },
 
@@ -248,37 +242,15 @@ agentSchema.virtual('summary').get(function() {
     id: this._id,
     name: this.agent.name,
     status: this.status,
-    frequency: `${this.agent.frequency.value} ${this.agent.frequency.unit}`,
     lastRun: this.lastRunAt,
     nextRun: this.nextRunAt
   };
 });
 
-// Method to calculate next run time
-agentSchema.methods.calculateNextRun = function() {
-  if (!this.agent.frequency) return null;
-  
-  const now = new Date();
-  const { value, unit } = this.agent.frequency;
-  
-  switch (unit) {
-    case 'days':
-      return new Date(now.getTime() + (value * 24 * 60 * 60 * 1000));
-    case 'weeks':
-      return new Date(now.getTime() + (value * 7 * 24 * 60 * 60 * 1000));
-    case 'months':
-      const nextMonth = new Date(now);
-      nextMonth.setMonth(nextMonth.getMonth() + value);
-      return nextMonth;
-    default:
-      return null;
-  }
-};
 
 // Method to activate agent
 agentSchema.methods.activate = function() {
   this.status = 'active';
-  this.nextRunAt = this.calculateNextRun();
   return this.save();
 };
 
@@ -300,13 +272,6 @@ agentSchema.statics.findReadyToRun = function() {
   });
 };
 
-// Pre-save middleware to set next run time
-agentSchema.pre('save', function(next) {
-  if (this.isModified('agent.frequency') && this.status === 'active') {
-    this.nextRunAt = this.calculateNextRun();
-  }
-  next();
-});
 
 const Agent = mongoose.model('Agent', agentSchema);
 

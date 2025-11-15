@@ -25,12 +25,6 @@ const validateAgentCreation = [
     .trim()
     .isLength({ min: 1, max: 1000 })
     .withMessage('Agent description must be between 1 and 1000 characters'),
-  body('frequencyValue')
-    .isInt({ min: 1, max: 5 })
-    .withMessage('Frequency value must be between 1 and 5'),
-  body('frequencyUnit')
-    .isIn(['days', 'weeks', 'months'])
-    .withMessage('Frequency unit must be days, weeks, or months')
 ];
 
 const validateProductUpdate = [
@@ -148,7 +142,7 @@ router.use(authMiddleware);
 router.post('/', validateAgentCreation, createAgent);
 
 // @route   PUT /api/agents/:id
-// @desc    Update agent basic information (name, description, frequency)
+// @desc    Update agent basic information (name, description)
 // @access  Private
 router.put('/:id', validateAgentCreation.concat([validateAgentId[0]]), updateAgent);
 

@@ -380,6 +380,43 @@ const CheckboxGroup = styled.div`
   gap: 0.75rem;
 `;
 
+const TextArea = styled.textarea`
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: var(--font-primary);
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 120px;
+  width: 100%;
+  transition: var(--transition-normal);
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: var(--shadow-glow);
+    background: rgba(26, 26, 46, 0.9);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &.error {
+    border-color: var(--error-color);
+  }
+`;
+
+const CharacterCount = styled.div`
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: right;
+  margin-top: 0.5rem;
+`;
+
 const ButtonGroup = styled.div`
   display: flex;
   gap: 1rem;
@@ -583,6 +620,7 @@ const ICPSelection = () => {
     private: false,
     public: false
   });
+  const [messagingStyle, setMessagingStyle] = useState('');
   const [error, setError] = useState('');
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -647,6 +685,8 @@ const ICPSelection = () => {
             if (apollo.jobTitleSettings?.includeSimilarTitles !== undefined) {
               setIncludeSimilarTitles(apollo.jobTitleSettings.includeSimilarTitles);
             }
+            // Always set messagingStyle, even if empty
+            setMessagingStyle(apollo.messagingStyle || '');
           }
         }
       } catch (error) {
@@ -686,8 +726,10 @@ const ICPSelection = () => {
         fundingStages,
         companyTypes,
         jobTitlesTab,
-        includeSimilarTitles
+        includeSimilarTitles,
+        messagingStyle: messagingStyle.trim()
       };
+
 
       // Update agent with ICP configuration
       const response = await agentService.updateAgentICP(agentId, icpData);
@@ -1006,6 +1048,26 @@ const ICPSelection = () => {
           />
         </FiltersGrid>
 
+        {/* Messaging Style Section */}
+        <FilterGroup style={{ marginTop: '2rem' }}>
+          <FilterLabel>
+            💬 Messaging Style (Optional)
+          </FilterLabel>
+          <HelpText style={{ marginBottom: '1rem' }}>
+            Define the tone, style, and approach your AI agent should use when communicating with prospects. 
+            This helps personalize outreach messages to match your brand voice.
+          </HelpText>
+          <TextArea
+            placeholder="Describe your preferred messaging style, tone, and approach. For example: 'Use a professional but friendly tone. Focus on value proposition and avoid being too salesy. Keep messages concise and personalized. Always mention specific pain points relevant to their industry.'"
+            value={messagingStyle}
+            onChange={(e) => setMessagingStyle(e.target.value)}
+            maxLength={2000}
+          />
+          <CharacterCount>
+            {messagingStyle.length}/2000 characters
+          </CharacterCount>
+        </FilterGroup>
+
         <ButtonGroup>
           <Button
             type="button"
@@ -1032,10 +1094,6 @@ const ICPSelection = () => {
       <AgentCreationModal
         isOpen={showModal}
         onClose={handleModalClose}
-        frequency={{
-          value: 1,
-          unit: 'days'
-        }}
         isUpdateMode={isUpdateMode}
       />
     </ICPContainer>

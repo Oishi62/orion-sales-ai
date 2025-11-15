@@ -138,7 +138,7 @@ const CloseButton = styled(motion.button)`
   }
 `;
 
-const AgentCreationModal = ({ isOpen, onClose, frequency, isUpdateMode = false }) => {
+const AgentCreationModal = ({ isOpen, onClose, isUpdateMode = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -207,10 +207,6 @@ const AgentCreationModal = ({ isOpen, onClose, frequency, isUpdateMode = false }
     };
   }, [isOpen, loadingMessages.length]);
 
-  const getFrequencyText = () => {
-    if (!frequency?.value || !frequency?.unit) return "your selected schedule";
-    return `every ${frequency.value} ${frequency.unit.toLowerCase()}`;
-  };
 
   return (
     <AnimatePresence>
@@ -294,8 +290,8 @@ const AgentCreationModal = ({ isOpen, onClose, frequency, isUpdateMode = false }
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   {isUpdateMode 
-                    ? '🎉 Your AI Sales Agent has been updated with the new settings. It will continue to run based on your configured frequency and use the updated information for better prospect targeting.'
-                    : '🎉 Your AI Sales Agent is now ready and will run based on the frequency you selected. It will automatically research prospects, score leads, and generate personalized outreach messages.'
+                    ? '🎉 Your AI Sales Agent has been updated with the new settings. It will use the updated information for better prospect targeting.'
+                    : '🎉 Your AI Sales Agent is now ready! It will automatically research prospects, score leads, and generate personalized outreach messages.'
                   }
                 </SuccessMessage>
 

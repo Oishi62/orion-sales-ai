@@ -73,9 +73,7 @@ const agentService = {
     try {
       const response = await agentAPI.post('/agents', {
         name: agentData.name,
-        description: agentData.description,
-        frequencyValue: agentData.frequencyValue,
-        frequencyUnit: agentData.frequencyUnit
+        description: agentData.description
       });
       return response.data;
     } catch (error) {
@@ -84,7 +82,7 @@ const agentService = {
   },
 
   /**
-   * Update agent basic information (name, description, frequency)
+   * Update agent basic information (name, description)
    * @param {string} agentId - Agent ID
    * @param {Object} agentData - Agent data to update
    * @returns {Promise<Object>} API response
@@ -93,9 +91,7 @@ const agentService = {
     try {
       const response = await agentAPI.put(`/agents/${agentId}`, {
         name: agentData.name,
-        description: agentData.description,
-        frequencyValue: agentData.frequencyValue,
-        frequencyUnit: agentData.frequencyUnit
+        description: agentData.description
       });
       return response.data;
     } catch (error) {
@@ -140,7 +136,8 @@ const agentService = {
         fundingStages: icpData.fundingStages,
         companyTypes: icpData.companyTypes,
         jobTitlesTab: icpData.jobTitlesTab,
-        includeSimilarTitles: icpData.includeSimilarTitles
+        includeSimilarTitles: icpData.includeSimilarTitles,
+        messagingStyle: icpData.messagingStyle
       });
       return response.data;
     } catch (error) {

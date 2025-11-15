@@ -17,7 +17,7 @@ const createAgent = async (req, res) => {
       });
     }
 
-    const { name, description, frequencyValue, frequencyUnit } = req.body;
+    const { name, description } = req.body;
     const userId = req.user.userId;
 
     // Create agent with initial configuration
@@ -25,11 +25,7 @@ const createAgent = async (req, res) => {
       userId,
       agent: {
         name: name.trim(),
-        description: description.trim(),
-        frequency: {
-          value: parseInt(frequencyValue),
-          unit: frequencyUnit
-        }
+        description: description.trim()
       },
       status: 'draft'
     };
@@ -44,7 +40,6 @@ const createAgent = async (req, res) => {
           id: agent._id,
           name: agent.agent.name,
           description: agent.agent.description,
-          frequency: agent.agent.frequency,
           status: agent.status
         }
       }
@@ -62,7 +57,7 @@ const createAgent = async (req, res) => {
   }
 };
 
-// @desc    Update agent basic information (name, description, frequency)
+// @desc    Update agent basic information (name, description)
 // @route   PUT /api/agents/:id
 // @access  Private
 const updateAgent = async (req, res) => {
@@ -77,7 +72,7 @@ const updateAgent = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { name, description, frequencyValue, frequencyUnit } = req.body;
+    const { name, description } = req.body;
     const userId = req.user.userId;
 
     // Find agent and verify ownership
@@ -92,8 +87,6 @@ const updateAgent = async (req, res) => {
     // Update agent basic information
     agent.agent.name = name.trim();
     agent.agent.description = description.trim();
-    agent.agent.frequency.value = parseInt(frequencyValue);
-    agent.agent.frequency.unit = frequencyUnit;
 
     const updatedAgent = await agent.save();
 
@@ -105,7 +98,6 @@ const updateAgent = async (req, res) => {
           id: updatedAgent._id,
           name: updatedAgent.agent.name,
           description: updatedAgent.agent.description,
-          frequency: updatedAgent.agent.frequency,
           status: updatedAgent.status,
           createdAt: updatedAgent.createdAt,
           updatedAt: updatedAgent.updatedAt
@@ -210,9 +202,11 @@ const updateAgentICP = async (req, res) => {
       fundingStages,
       companyTypes,
       jobTitlesTab,
-      includeSimilarTitles
+      includeSimilarTitles,
+      messagingStyle
     } = req.body;
     const userId = req.user.userId;
+
 
     // Find agent and verify ownership
     const agent = await Agent.findOne({ _id: id, userId });
@@ -244,6 +238,9 @@ const updateAgentICP = async (req, res) => {
         includeSimilarTitles: Boolean(includeSimilarTitles)
       }
     };
+
+    // Always include messagingStyle (empty string if not provided to allow clearing)
+    icpData.messagingStyle = messagingStyle ? messagingStyle.trim() : '';
 
     const updatedAgent = await agentService.updateAgentICP(id, icpData);
 
@@ -310,8 +307,7 @@ const activateAgent = async (req, res) => {
           id: activatedAgent._id,
           name: activatedAgent.agent.name,
           status: activatedAgent.status,
-          nextRunAt: activatedAgent.nextRunAt,
-          frequency: `${activatedAgent.agent.frequency.value} ${activatedAgent.agent.frequency.unit}`
+          nextRunAt: activatedAgent.nextRunAt
         }
       }
     });
@@ -358,7 +354,6 @@ const getUserAgents = async (req, res) => {
           name: agent.agent.name,
           description: agent.agent.description,
           status: agent.status,
-          frequency: agent.agent.frequency,
           lastRunAt: agent.lastRunAt,
           nextRunAt: agent.nextRunAt,
           metrics: agent.metrics,

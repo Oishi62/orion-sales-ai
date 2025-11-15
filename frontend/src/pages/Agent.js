@@ -203,15 +203,6 @@ const Select = styled.select`
   }
 `;
 
-const FrequencyControls = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
 
 const FormErrorMessage = styled.span`
   color: var(--error-color);
@@ -492,9 +483,6 @@ const AgentMeta = styled.div`
   color: var(--text-muted);
 `;
 
-const AgentFrequency = styled.span`
-  font-family: var(--font-mono);
-`;
 
 const AgentDate = styled.span`
   font-family: var(--font-primary);
@@ -592,8 +580,6 @@ const Agent = () => {
     // Populate form with agent data
     setValue('name', agent.name);
     setValue('description', agent.description);
-    setValue('frequencyValue', agent.frequency?.value?.toString() || '1');
-    setValue('frequencyUnit', agent.frequency?.unit || 'days');
     
     // Clear any existing errors
     setError('');
@@ -616,9 +602,7 @@ const Agent = () => {
         // Update existing agent
         const response = await agentService.updateAgent(selectedAgent.id, {
           name: data.name,
-          description: data.description,
-          frequencyValue: parseInt(data.frequencyValue),
-          frequencyUnit: data.frequencyUnit
+          description: data.description
         });
 
         console.log('Agent updated successfully:', response.data.agent);
@@ -633,9 +617,7 @@ const Agent = () => {
         // Create new agent
         const response = await agentService.createAgent({
           name: data.name,
-          description: data.description,
-          frequencyValue: parseInt(data.frequencyValue),
-          frequencyUnit: data.frequencyUnit
+          description: data.description
         });
 
         console.log('Agent created successfully:', response.data.agent);
@@ -756,49 +738,6 @@ const Agent = () => {
             {errors.description && <FormErrorMessage>{errors.description.message}</FormErrorMessage>}
           </FormGroup>
 
-          <FormGroup>
-            <Label>
-              ⏱️ Cadence Frequency
-            </Label>
-            <FrequencyControls>
-              <Select
-                defaultValue=""
-                className={errors.frequencyValue ? 'error' : ''}
-                {...register('frequencyValue', {
-                  required: 'Please select how often the agent should run'
-                })}
-              >
-                <option value="" disabled>
-                  Select interval
-                </option>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </Select>
-
-              <Select
-                defaultValue=""
-                className={errors.frequencyUnit ? 'error' : ''}
-                {...register('frequencyUnit', {
-                  required: 'Please choose a time unit'
-                })}
-              >
-                <option value="" disabled>
-                  Select time unit
-                </option>
-                <option value="days">Days</option>
-                <option value="weeks">Weeks</option>
-                <option value="months">Months</option>
-              </Select>
-            </FrequencyControls>
-            {(errors.frequencyValue || errors.frequencyUnit) && (
-              <FormErrorMessage>
-                {errors.frequencyValue?.message || errors.frequencyUnit?.message}
-              </FormErrorMessage>
-            )}
-          </FormGroup>
 
           <ButtonGroup>
             <Button
@@ -879,9 +818,6 @@ const Agent = () => {
                       </AgentDescription>
                       
                       <AgentMeta>
-                        <AgentFrequency>
-                          Every {agent.frequency?.value} {agent.frequency?.unit}
-                        </AgentFrequency>
                         <AgentDate>
                           {formatDate(agent.createdAt)}
                         </AgentDate>

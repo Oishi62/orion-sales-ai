@@ -57,23 +57,33 @@ class AgentService {
    */
   async updateAgentICP(agentId, icpData) {
     try {
+      // First get the current agent to preserve existing apollo fields
+      const currentAgent = await Agent.findById(agentId);
+      if (!currentAgent) {
+        throw new Error('Agent not found');
+      }
+
+      // Merge existing apollo data with new ICP data
+      const existingApollo = currentAgent.apollo?.toObject?.() || currentAgent.apollo || {};
+      const mergedApolloData = {
+        ...existingApollo,
+        ...icpData
+      };
+
       const agent = await Agent.findByIdAndUpdate(
         agentId,
         { 
           $set: { 
-            apollo: icpData,
+            apollo: mergedApolloData,
             updatedAt: new Date()
           }
         },
         { new: true, runValidators: true }
       );
 
-      if (!agent) {
-        throw new Error('Agent not found');
-      }
-
       return agent;
     } catch (error) {
+      console.error('❌ AgentService - Error updating agent ICP:', error);
       throw error;
     }
   }
@@ -327,10 +337,6 @@ class AgentService {
       validation.isValid = false;
     }
 
-    if (!agent.agent?.frequency?.value || !agent.agent?.frequency?.unit) {
-      validation.missingFields.push('Agent frequency');
-      validation.isValid = false;
-    }
 
     // Check product information
     if (!agent.product?.description && !agent.product?.url) {
