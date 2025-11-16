@@ -9,6 +9,9 @@ import Dashboard from './pages/Dashboard';
 import Agent from './pages/Agent';
 import ProductDescription from './pages/ProductDescription';
 import ICPSelection from './pages/ICPSelection';
+import Workflow from './pages/Workflow';
+import WorkflowBuilder from './pages/WorkflowBuilder';
+import WorkflowExecutions from './pages/WorkflowExecutions';
 
 function App() {
   return (
@@ -50,6 +53,32 @@ function App() {
               <Layout>
                 <ICPSelection />
               </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/workflow" element={
+            <ProtectedRoute>
+              <Layout>
+                <Workflow />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/workflow/builder" element={
+            <ProtectedRoute>
+              <WorkflowBuilder />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/workflow/builder/:workflowId" element={
+            <ProtectedRoute>
+              <WorkflowBuilder />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/workflow/:workflowId/executions" element={
+            <ProtectedRoute>
+              <WorkflowExecutions />
             </ProtectedRoute>
           } />
           

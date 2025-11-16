@@ -446,6 +446,42 @@ const deleteAgent = async (req, res) => {
   }
 };
 
+// @desc    Get agents for workflow (simplified data)
+// @route   GET /api/agents/workflow
+// @access  Private
+const getAgentsForWorkflow = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const agents = await agentService.getUserAgents(userId);
+
+    // Return simplified agent data for workflow nodes
+    const workflowAgents = agents.map(agent => ({
+      id: agent._id,
+      name: agent.agent.name,
+      description: agent.agent.description,
+      status: agent.status,
+      hasApolloConfig: !!(agent.apollo && Object.keys(agent.apollo).length > 0),
+      createdAt: agent.createdAt
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        agents: workflowAgents,
+        total: workflowAgents.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching agents for workflow:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error while fetching agents'
+    });
+  }
+};
+
 module.exports = {
   createAgent,
   updateAgent,
@@ -454,5 +490,6 @@ module.exports = {
   activateAgent,
   getUserAgents,
   getAgentById,
-  deleteAgent
+  deleteAgent,
+  getAgentsForWorkflow
 };

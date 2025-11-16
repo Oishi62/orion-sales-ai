@@ -222,7 +222,7 @@ const Layout = ({ children }) => {
   const navigationItems = [
     { icon: '📊', text: 'Dashboard', path: '/dashboard' },
     { icon: '🤖', text: 'Agent', path: '/agent' },
-    { icon: '📈', text: 'Analytics', path: '/analytics' },
+    { icon: '🔄', text: 'Workflow', path: '/workflow' },
     { icon: '🎯', text: 'Campaigns', path: '/campaigns' },
     { icon: '⚙️', text: 'Settings', path: '/settings' },
   ];

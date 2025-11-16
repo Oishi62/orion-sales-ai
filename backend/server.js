@@ -51,12 +51,14 @@ if (process.env.NODE_ENV !== 'production') {
 const agentRoutes = require('./routes/agentRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const ragRoutes = require('./routes/ragRoutes');
+const workflowRoutes = require('./routes/workflowRoutes');
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api', documentRoutes);
 app.use('/api/rag', ragRoutes);
+app.use('/api/workflows', workflowRoutes);
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {

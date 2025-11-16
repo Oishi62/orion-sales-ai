@@ -10,7 +10,8 @@ const {
   activateAgent,
   getUserAgents,
   getAgentById,
-  deleteAgent
+  deleteAgent,
+  getAgentsForWorkflow
 } = require('../controllers/agentController');
 
 const authMiddleware = require('../utils/authMiddleware');
@@ -160,6 +161,11 @@ router.put('/:id/icp', validateICPUpdate, updateAgentICP);
 // @desc    Activate agent (Final step)
 // @access  Private
 router.put('/:id/activate', validateAgentId, activateAgent);
+
+// @route   GET /api/agents/workflow
+// @desc    Get agents for workflow (simplified data)
+// @access  Private
+router.get('/workflow', getAgentsForWorkflow);
 
 // @route   GET /api/agents
 // @desc    Get all agents for user

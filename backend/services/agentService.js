@@ -361,6 +361,7 @@ class AgentService {
 
     return validation;
   }
+
 }
 
 module.exports = new AgentService();
