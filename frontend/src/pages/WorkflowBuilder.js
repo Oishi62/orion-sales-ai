@@ -156,11 +156,59 @@ const LeadResearchNode = ({ data, selected, id }) => {
   );
 };
 
+const DraftEmailNode = ({ data, selected, id }) => {
+  return (
+    <NodeContainer selected={selected} nodeType="draft_email">
+      {/* Connection Handles */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="input"
+        style={{
+          background: '#f59e0b',
+          border: '2px solid #fff',
+          width: '12px',
+          height: '12px',
+        }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="output"
+        style={{
+          background: '#10b981',
+          border: '2px solid #fff',
+          width: '12px',
+          height: '12px',
+        }}
+      />
+      
+      <NodeHeader>
+        <NodeIcon>📧</NodeIcon>
+        <NodeTitle>Draft Email</NodeTitle>
+        <NodeBadge nodeType="draft_email">EMAIL</NodeBadge>
+        <DeleteButton onClick={(e) => {
+          e.stopPropagation();
+          data.onDelete?.(id);
+        }}>
+          ×
+        </DeleteButton>
+      </NodeHeader>
+      <NodeContent>
+        <NodeDescription>
+          Draft personalized emails using Gemini AI based on lead insights
+        </NodeDescription>
+      </NodeContent>
+    </NodeContainer>
+  );
+};
+
 // Node types for ReactFlow
 const nodeTypes = {
   schedule: ScheduleNode,
   agent: AgentNode,
   lead_research: LeadResearchNode,
+  draft_email: DraftEmailNode,
 };
 
 const WorkflowBuilder = () => {
@@ -208,6 +256,13 @@ const WorkflowBuilder = () => {
       icon: '🔬',
       name: 'Lead Research',
       description: 'Research leads using AI and RAG system',
+      category: 'ACTIONS'
+    },
+    {
+      type: 'draft_email',
+      icon: '📧',
+      name: 'Draft Email',
+      description: 'Draft personalized emails using Gemini AI',
       category: 'ACTIONS'
     }
   ];
@@ -313,8 +368,8 @@ const WorkflowBuilder = () => {
 
   // Handle node click for configuration
   const onNodeClick = useCallback((event, node) => {
-    // Don't open config modal for Lead Research nodes - they don't need user input
-    if (node.type === 'lead_research') {
+    // Don't open config modal for Lead Research and Draft Email nodes - they don't need user input
+    if (node.type === 'lead_research' || node.type === 'draft_email') {
       return;
     }
     
@@ -356,6 +411,9 @@ const WorkflowBuilder = () => {
     } else if (nodeType === 'lead_research') {
       nodeName = 'Lead Research';
       nodeConfig = { ragLimit: 5, ragThreshold: 0.3, maxConcurrent: 2 };
+    } else if (nodeType === 'draft_email') {
+      nodeName = 'Draft Email';
+      nodeConfig = { maxConcurrent: 3 };
     }
     
     const newNode = {
@@ -472,7 +530,7 @@ const WorkflowBuilder = () => {
           </PaletteHeader>
 
           <NodeCategory>
-            <CategoryTitle>TRIGGERS</CategoryTitle>
+            <CategoryTitle>TOOLS</CategoryTitle>
             {nodeLibrary.map((nodeType) => (
               <PaletteNode
                 key={nodeType.type}

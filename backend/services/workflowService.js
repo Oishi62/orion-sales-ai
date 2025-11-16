@@ -3,6 +3,7 @@ const Execution = require('../models/Execution');
 const Agent = require('../models/Agent');
 const apolloService = require('./apolloService');
 const leadResearchService = require('./leadResearchService');
+const draftEmailService = require('./draftEmailService');
 
 class WorkflowService {
   // Create a new workflow
@@ -243,6 +244,9 @@ class WorkflowService {
             case 'lead_research':
               output = await this.executeLeadResearchNode(node, previousNodeOutput);
               break;
+            case 'draft_email':
+              output = await this.executeDraftEmailNode(node, previousNodeOutput);
+              break;
             default:
               throw new Error(`Unsupported node type: ${node.type}`);
           }
@@ -409,6 +413,74 @@ class WorkflowService {
       };
     } catch (error) {
       console.error(`❌ Error executing lead research node '${node.name}':`, error);
+      throw error;
+    }
+  }
+
+  // Execute draft email node
+  async executeDraftEmailNode(node, input) {
+    try {
+      console.log(`📧 Executing draft email node: ${node.name}`);
+
+      // Get leads with research results from previous node execution (typically from lead research node)
+      const researchResults = input.researchResults || [];
+      const agentId = input.agentId; // Get agentId from previous agent node
+      
+      if (!researchResults || researchResults.length === 0) {
+        throw new Error('Draft email node requires leads with research results from previous node');
+      }
+
+      console.log(`📊 Processing ${researchResults.length} leads for email drafting`);
+
+      // Get agent information for messaging style
+      let agent = null;
+      if (agentId) {
+        try {
+          const Agent = require('../models/Agent');
+          agent = await Agent.findById(agentId);
+          console.log(`🤖 Found agent: ${agent?.agent?.name} with messaging style: ${agent?.apollo?.messagingStyle ? 'Yes' : 'No'}`);
+        } catch (error) {
+          console.warn(`⚠️ Could not fetch agent ${agentId}:`, error.message);
+        }
+      }
+
+      // Extract leads with their insights from research results
+      const leadsWithInsights = researchResults.map(result => ({
+        ...result.leadData,
+        leadInsights: result.leadInsights || result.insights || ''
+      }));
+
+      // Get configuration from node
+      const config = node.config || {};
+      
+      const emailDraftConfig = {
+        maxConcurrent: config.maxConcurrent || 3,
+        messagingStyle: agent?.apollo?.messagingStyle || null,
+        agentName: agent?.agent?.name || 'Sales Agent'
+      };
+      
+      console.log('📧 Email Draft Config:', emailDraftConfig);
+      
+      // Draft emails for all leads
+      const emailResults = await draftEmailService.processLeadsForEmailDrafting(leadsWithInsights, emailDraftConfig);
+
+      return {
+        message: `Draft email node '${node.name}' executed successfully`,
+        nodeId: node.id,
+        nodeName: node.name,
+        processedLeads: emailResults.summary.successfulDrafts,
+        failedLeads: emailResults.summary.errors,
+        totalLeads: emailResults.summary.totalLeads,
+        draftedEmails: emailResults.draftedEmails,
+        failures: emailResults.errors,
+        summary: emailResults.summary,
+        metadata: emailResults.metadata,
+        executedAt: new Date(),
+        config: node.config,
+        input
+      };
+    } catch (error) {
+      console.error(`❌ Error executing draft email node '${node.name}':`, error);
       throw error;
     }
   }

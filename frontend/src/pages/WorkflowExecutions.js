@@ -414,6 +414,118 @@ const ResearchCard = styled.div`
   }
 `;
 
+const EmailCard = styled.div`
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  
+  .email-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    
+    .lead-info {
+      flex: 1;
+      
+      .lead-name {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+      }
+      
+      .company-name {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+      }
+    }
+    
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-xs);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      
+      &[data-status="success"] {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
+      
+      &[data-status="error"] {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+      }
+    }
+  }
+  
+  .email-subject {
+    margin-bottom: 1rem;
+    
+    .section-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .subject-text {
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 0.5rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+  }
+  
+  .email-body {
+    margin-bottom: 1rem;
+    
+    .section-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .body-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 0.75rem;
+      border-radius: var(--radius-xs);
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  }
+  
+  .error-section {
+    .section-title {
+      color: #ef4444;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .error-text {
+      color: #ef4444;
+      font-size: 0.85rem;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 0.5rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+  }
+`;
+
 const EmptyState = styled.div`
   text-align: center;
   padding: 4rem 2rem;
@@ -554,6 +666,54 @@ const WorkflowExecutions = () => {
                 </div>
               )}
             </ResearchCard>
+          ))}
+        </LeadsGrid>
+      );
+    }
+
+    // If it's draft email results
+    if (nodeExecution.nodeType === 'draft_email' && nodeExecution.output.draftedEmails) {
+      return (
+        <LeadsGrid>
+          {nodeExecution.output.draftedEmails.map((emailDraft, index) => (
+            <EmailCard key={index}>
+              <div className="email-header">
+                <div className="lead-info">
+                  <div className="lead-name">
+                    {emailDraft.leadData.first_name} {emailDraft.leadData.last_name}
+                  </div>
+                  <div className="company-name">
+                    {emailDraft.leadData.organization_name}
+                  </div>
+                </div>
+                <div className="status-badge" data-status={emailDraft.status}>
+                  {emailDraft.status === 'success' ? '✅' : '❌'} {emailDraft.status}
+                </div>
+              </div>
+              
+              <div className="email-subject">
+                <div className="section-title">Subject:</div>
+                <div className="subject-text">
+                  {emailDraft.email_subject}
+                </div>
+              </div>
+              
+              <div className="email-body">
+                <div className="section-title">Email Body:</div>
+                <div className="body-text">
+                  {emailDraft.email_body}
+                </div>
+              </div>
+              
+              {emailDraft.error && (
+                <div className="error-section">
+                  <div className="section-title">Error:</div>
+                  <div className="error-text">
+                    {emailDraft.error}
+                  </div>
+                </div>
+              )}
+            </EmailCard>
           ))}
         </LeadsGrid>
       );
