@@ -106,10 +106,61 @@ const AgentNode = ({ data, selected, id }) => {
   );
 };
 
+const LeadResearchNode = ({ data, selected, id }) => {
+  return (
+    <NodeContainer selected={selected} nodeType="lead_research">
+      {/* Connection Handles */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="input"
+        style={{
+          background: '#f59e0b',
+          border: '2px solid #fff',
+          width: '12px',
+          height: '12px',
+        }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="output"
+        style={{
+          background: '#10b981',
+          border: '2px solid #fff',
+          width: '12px',
+          height: '12px',
+        }}
+      />
+      
+      <NodeHeader>
+        <NodeIcon>🔬</NodeIcon>
+        <NodeTitle>Lead Research</NodeTitle>
+        <NodeBadge nodeType="lead_research">RESEARCH</NodeBadge>
+        <DeleteButton onClick={(e) => {
+          e.stopPropagation();
+          data.onDelete?.(id);
+        }}>
+          ×
+        </DeleteButton>
+      </NodeHeader>
+      <NodeContent>
+        <NodeDescription>
+          {data.config?.ragLimit 
+            ? `Research leads with ${data.config.ragLimit} RAG results`
+            : 'Research leads using AI and documentation'
+          }
+        </NodeDescription>
+      </NodeContent>
+    </NodeContainer>
+  );
+};
+
 // Node types for ReactFlow
 const nodeTypes = {
   schedule: ScheduleNode,
   agent: AgentNode,
+  lead_research: LeadResearchNode,
 };
 
 const WorkflowBuilder = () => {
@@ -136,6 +187,11 @@ const WorkflowBuilder = () => {
     agentId: '',
     leadCount: 25
   });
+  const [leadResearchConfig, setLeadResearchConfig] = useState({
+    ragLimit: 5,
+    ragThreshold: 0.3,
+    maxConcurrent: 2
+  });
   const [availableAgents, setAvailableAgents] = useState([]);
 
   // Available node types for the palette
@@ -146,6 +202,13 @@ const WorkflowBuilder = () => {
       name: 'Schedule',
       description: 'Trigger workflow at specific times or intervals',
       category: 'TRIGGERS'
+    },
+    {
+      type: 'lead_research',
+      icon: '🔬',
+      name: 'Lead Research',
+      description: 'Research leads using AI and RAG system',
+      category: 'ACTIONS'
     }
   ];
 
@@ -250,6 +313,11 @@ const WorkflowBuilder = () => {
 
   // Handle node click for configuration
   const onNodeClick = useCallback((event, node) => {
+    // Don't open config modal for Lead Research nodes - they don't need user input
+    if (node.type === 'lead_research') {
+      return;
+    }
+    
     setSelectedNodeForConfig(node);
     
     if (node.type === 'schedule') {
@@ -279,13 +347,24 @@ const WorkflowBuilder = () => {
 
   // Add new node to canvas
   const addNode = (nodeType, agentData = null) => {
+    let nodeName = nodeType.charAt(0).toUpperCase() + nodeType.slice(1);
+    let nodeConfig = {};
+    
+    if (agentData) {
+      nodeName = agentData.name;
+      nodeConfig = { agentId: agentData.id, leadCount: 25 };
+    } else if (nodeType === 'lead_research') {
+      nodeName = 'Lead Research';
+      nodeConfig = { ragLimit: 5, ragThreshold: 0.3, maxConcurrent: 2 };
+    }
+    
     const newNode = {
       id: `${nodeType}_${Date.now()}`,
       type: nodeType,
       position: { x: 250, y: 250 },
       data: {
-        name: agentData ? agentData.name : nodeType.charAt(0).toUpperCase() + nodeType.slice(1),
-        config: agentData ? { agentId: agentData.id, leadCount: 25 } : {},
+        name: nodeName,
+        config: nodeConfig,
         onDelete: deleteNode
       }
     };
@@ -303,7 +382,14 @@ const WorkflowBuilder = () => {
   const saveNodeConfig = () => {
     if (!selectedNodeForConfig) return;
     
-    const config = selectedNodeForConfig.type === 'schedule' ? scheduleConfig : agentConfig;
+    let config;
+    if (selectedNodeForConfig.type === 'schedule') {
+      config = scheduleConfig;
+    } else if (selectedNodeForConfig.type === 'agent') {
+      config = agentConfig;
+    } else if (selectedNodeForConfig.type === 'lead_research') {
+      config = leadResearchConfig;
+    }
     
     setNodes((nds) =>
       nds.map((node) =>
@@ -454,7 +540,11 @@ const WorkflowBuilder = () => {
           <ModalContent>
             <ModalHeader>
               <ModalTitle>
-                Configure {selectedNodeForConfig.type === 'schedule' ? 'Schedule' : 'Agent'} Node
+                Configure {
+                  selectedNodeForConfig.type === 'schedule' ? 'Schedule' : 
+                  selectedNodeForConfig.type === 'agent' ? 'Agent' : 
+                  'Lead Research'
+                } Node
               </ModalTitle>
               <CloseButton onClick={() => setShowConfigModal(false)}>×</CloseButton>
             </ModalHeader>
@@ -526,6 +616,56 @@ const WorkflowBuilder = () => {
                   />
                   <ConfigDescription>
                     This will fetch {agentConfig.leadCount} leads from Apollo using the selected agent's ICP configuration
+                  </ConfigDescription>
+                </ConfigSection>
+              )}
+
+              {selectedNodeForConfig.type === 'lead_research' && (
+                <ConfigSection>
+                  <ConfigLabel>RAG Results Limit</ConfigLabel>
+                  <ConfigInput
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={leadResearchConfig.ragLimit}
+                    onChange={(e) => setLeadResearchConfig(prev => ({
+                      ...prev,
+                      ragLimit: parseInt(e.target.value)
+                    }))}
+                  />
+                  <ConfigDescription>
+                    Number of relevant documentation pieces to retrieve for each lead
+                  </ConfigDescription>
+
+                  <ConfigLabel>RAG Similarity Threshold</ConfigLabel>
+                  <ConfigInput
+                    type="number"
+                    min="0.1"
+                    max="1.0"
+                    step="0.1"
+                    value={leadResearchConfig.ragThreshold}
+                    onChange={(e) => setLeadResearchConfig(prev => ({
+                      ...prev,
+                      ragThreshold: parseFloat(e.target.value)
+                    }))}
+                  />
+                  <ConfigDescription>
+                    Minimum similarity score for RAG results (0.1 = loose, 1.0 = exact match)
+                  </ConfigDescription>
+
+                  <ConfigLabel>Max Concurrent Requests</ConfigLabel>
+                  <ConfigInput
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={leadResearchConfig.maxConcurrent}
+                    onChange={(e) => setLeadResearchConfig(prev => ({
+                      ...prev,
+                      maxConcurrent: parseInt(e.target.value)
+                    }))}
+                  />
+                  <ConfigDescription>
+                    Number of leads to research simultaneously (higher = faster but more resource intensive)
                   </ConfigDescription>
                 </ConfigSection>
               )}
@@ -763,7 +903,11 @@ const NodeTitle = styled.span`
 `;
 
 const NodeBadge = styled.span`
-  background: ${props => props.nodeType === 'schedule' ? '#8b5cf6' : '#10b981'};
+  background: ${props => 
+    props.nodeType === 'schedule' ? '#8b5cf6' : 
+    props.nodeType === 'agent' ? '#10b981' : 
+    props.nodeType === 'lead_research' ? '#f59e0b' : '#6b7280'
+  };
   color: white;
   font-size: 0.6rem;
   font-weight: 600;

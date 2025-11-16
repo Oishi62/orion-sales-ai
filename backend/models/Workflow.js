@@ -9,7 +9,7 @@ const nodeSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['schedule', 'agent', 'trigger', 'action', 'condition', 'webhook']
+    enum: ['schedule', 'agent', 'lead_research', 'trigger']
   },
   name: {
     type: String,

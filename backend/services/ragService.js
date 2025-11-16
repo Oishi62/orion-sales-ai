@@ -93,7 +93,7 @@ class RAGService {
       console.log('💾 Step 3: Storing vectors in Qdrant...');
       this.updateProcessingProgress(processingId, 80, 'Storing vectors in database...');
       
-      const vectorCount = await qdrantService.storeDocumentVectors(document._id, chunksWithEmbeddings);
+      const vectorCount = await qdrantService.storeDocumentVectors(document._id, chunksWithEmbeddings, agentId);
 
       // Step 4: Update document metadata
       console.log('📝 Step 4: Updating document metadata...');
@@ -308,6 +308,80 @@ class RAGService {
     } catch (error) {
       console.error('Error getting agent RAG stats:', error);
       throw error;
+    }
+  }
+
+  // Query documents using RAG
+  async queryDocuments(query, options = {}) {
+    try {
+      console.log(`🔍 RAG Query: "${query}"`);
+      
+      const { limit = 5, threshold = 0.3, agentId = null } = options; // Lowered threshold from 0.7 to 0.5
+      
+      if (agentId) {
+        console.log(`🎯 Filtering results for agent: ${agentId}`);
+      }
+      
+      // Step 1: Generate embedding for the query
+      console.log('🧠 Generating query embedding...');
+      const queryEmbeddingResult = await embeddingService.generateQueryEmbedding(query);
+      const queryEmbedding = queryEmbeddingResult.embedding; // Extract just the embedding array
+      
+      console.log('🔍 Query embedding info:', {
+        isArray: Array.isArray(queryEmbedding),
+        length: queryEmbedding?.length,
+        firstFew: queryEmbedding?.slice(0, 3),
+        type: typeof queryEmbedding
+      });
+      
+      // Step 2: Search similar vectors in Qdrant
+      console.log('🔎 Searching similar vectors...');
+      const rawResults = await qdrantService.searchSimilarVectors(queryEmbedding, limit, { agentId });
+      
+      // Filter by threshold and map to expected format
+      const searchResults = rawResults
+        .filter(result => result.score >= threshold)
+        .map(result => ({
+          score: result.score,
+          content: result.payload?.text || '', // Map payload.text to content
+          metadata: {
+            documentId: result.payload?.documentId,
+            agentId: result.payload?.agentId,
+            chunkIndex: result.payload?.chunkIndex,
+            pointId: result.payload?.pointId
+          }
+        }));
+      
+      console.log(`✅ Found ${searchResults.length} relevant results (filtered by threshold ${threshold})`);
+      console.log('🔍 Threshold debug:', { threshold, optionsThreshold: options.threshold, defaultThreshold: 0.3 });
+      console.log('🔍 Raw results scores:', rawResults.map(r => ({ score: r.score, text: r.payload?.text?.substring(0, 100) + '...' })));
+      
+      return {
+        success: true,
+        query,
+        results: searchResults,
+        resultCount: searchResults.length
+      };
+      
+    } catch (error) {
+      console.error('❌ Error querying documents:', error);
+      return {
+        success: false,
+        query,
+        error: error.message,
+        results: []
+      };
+    }
+  }
+
+  // Test RAG connection and functionality
+  async testConnection() {
+    try {
+      const healthCheck = await this.healthCheck();
+      return healthCheck.status === 'healthy';
+    } catch (error) {
+      console.error('❌ RAG connection test failed:', error);
+      return false;
     }
   }
 

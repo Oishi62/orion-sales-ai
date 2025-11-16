@@ -40,8 +40,63 @@ class QdrantService {
         });
 
         console.log('✅ Qdrant collection created successfully');
+        
+        // Create index for agentId field to enable filtering
+        console.log('🔧 Creating index for agentId field...');
+        await this.client.createPayloadIndex(this.collectionName, {
+          field_name: 'agentId',
+          field_schema: 'keyword'
+        });
+        console.log('✅ AgentId index created successfully');
+        
+        // Create index for documentId field as well (for future use)
+        console.log('🔧 Creating index for documentId field...');
+        await this.client.createPayloadIndex(this.collectionName, {
+          field_name: 'documentId',
+          field_schema: 'keyword'
+        });
+        console.log('✅ DocumentId index created successfully');
+        
       } else {
         console.log('✅ Qdrant collection already exists');
+        
+        // Check if indexes exist, create them if they don't
+        try {
+          console.log('🔧 Ensuring payload indexes exist...');
+          
+          // Try to create agentId index (will fail silently if it already exists)
+          try {
+            await this.client.createPayloadIndex(this.collectionName, {
+              field_name: 'agentId',
+              field_schema: 'keyword'
+            });
+            console.log('✅ AgentId index created');
+          } catch (indexError) {
+            if (indexError.message?.includes('already exists') || indexError.status === 409) {
+              console.log('✅ AgentId index already exists');
+            } else {
+              console.warn('⚠️ Could not create agentId index:', indexError.message);
+            }
+          }
+          
+          // Try to create documentId index
+          try {
+            await this.client.createPayloadIndex(this.collectionName, {
+              field_name: 'documentId',
+              field_schema: 'keyword'
+            });
+            console.log('✅ DocumentId index created');
+          } catch (indexError) {
+            if (indexError.message?.includes('already exists') || indexError.status === 409) {
+              console.log('✅ DocumentId index already exists');
+            } else {
+              console.warn('⚠️ Could not create documentId index:', indexError.message);
+            }
+          }
+          
+        } catch (error) {
+          console.warn('⚠️ Error checking/creating indexes:', error.message);
+        }
       }
 
       return true;
@@ -52,7 +107,7 @@ class QdrantService {
   }
 
   // Store document vectors in Qdrant
-  async storeDocumentVectors(documentId, chunks) {
+  async storeDocumentVectors(documentId, chunks, agentId = null) {
     try {
       // Validate documentId
       if (!documentId) {
@@ -69,6 +124,7 @@ class QdrantService {
           vector: chunk.embedding,
           payload: {
             documentId: documentId,
+            agentId: agentId, // Store agentId for filtering
             chunkIndex: index,
             text: chunk.text,
             pointId: pointId, // Store the UUID in payload for reference
@@ -119,8 +175,18 @@ class QdrantService {
   }
 
   // Search similar vectors (for future RAG querying)
-  async searchSimilarVectors(queryVector, limit = 5, documentIds = null) {
+  async searchSimilarVectors(queryVector, limit = 5, options = {}) {
     try {
+      const { documentIds = null, agentId = null } = options;
+      
+      console.log('🔍 Search options:', { agentId, documentIds, limit });
+      console.log('🔍 Vector info:', {
+        isArray: Array.isArray(queryVector),
+        length: queryVector?.length,
+        firstFew: queryVector?.slice(0, 3),
+        type: typeof queryVector
+      });
+      
       const searchParams = {
         vector: queryVector,
         limit: limit,
@@ -128,24 +194,51 @@ class QdrantService {
         with_vector: false
       };
 
+      // Build filter conditions
+      const filterConditions = [];
+      
+      // Add filter for specific agent if provided
+      if (agentId) {
+        filterConditions.push({
+          key: 'agentId',
+          match: {
+            value: agentId
+          }
+        });
+        console.log('🎯 Adding agentId filter:', agentId);
+      }
+      
       // Add filter for specific documents if provided
       if (documentIds && documentIds.length > 0) {
+        filterConditions.push({
+          key: 'documentId',
+          match: {
+            any: documentIds
+          }
+        });
+        console.log('📄 Adding documentIds filter:', documentIds);
+      }
+      
+      // Apply filters if any exist
+      if (filterConditions.length > 0) {
         searchParams.filter = {
-          must: [
-            {
-              key: 'documentId',
-              match: {
-                any: documentIds
-              }
-            }
-          ]
+          must: filterConditions
         };
+        console.log('🔍 Applied filters:', JSON.stringify(searchParams.filter, null, 2));
       }
 
       const searchResult = await this.client.search(this.collectionName, searchParams);
+      console.log('✅ Search completed, results:', searchResult.length);
       return searchResult;
     } catch (error) {
       console.error('❌ Error searching vectors in Qdrant:', error);
+      console.error('❌ Search params that caused error:', JSON.stringify({
+        vector: 'VECTOR_ARRAY',
+        limit: limit,
+        with_payload: true,
+        with_vector: false,
+        filter: error.searchParams?.filter
+      }, null, 2));
       throw error;
     }
   }

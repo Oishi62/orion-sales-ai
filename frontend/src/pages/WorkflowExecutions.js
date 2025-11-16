@@ -306,6 +306,114 @@ const LeadCard = styled.div`
   }
 `;
 
+const ResearchCard = styled.div`
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  
+  .research-header {
+    margin-bottom: 1rem;
+    
+    .lead-name {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .company-name {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+  }
+  
+  .company-description {
+    margin-bottom: 1rem;
+    
+    .section-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .description-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 0.5rem;
+      border-radius: var(--radius-xs);
+    }
+  }
+  
+  .documentation-section {
+    .section-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .doc-result {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius-xs);
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .doc-score {
+        color: var(--accent-cyan);
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      
+      .doc-content {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        line-height: 1.3;
+      }
+    }
+    
+    .documentation-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 0.5rem;
+      border-radius: var(--radius-xs);
+      white-space: pre-wrap;
+    }
+  }
+  
+  .insights-section {
+    margin-top: 1rem;
+    
+    .section-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .insights-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 0.75rem;
+      border-radius: var(--radius-xs);
+      white-space: pre-wrap;
+    }
+  }
+`;
+
 const EmptyState = styled.div`
   text-align: center;
   padding: 4rem 2rem;
@@ -406,6 +514,51 @@ const WorkflowExecutions = () => {
       return <OutputContent>No output data</OutputContent>;
     }
 
+    // If it's lead research results
+    if (nodeExecution.nodeType === 'lead_research' && nodeExecution.output.researchResults) {
+      return (
+        <LeadsGrid>
+          {nodeExecution.output.researchResults.map((research, index) => (
+            <ResearchCard key={index}>
+              <div className="research-header">
+                <div className="lead-name">
+                  {research.lead.name}
+                </div>
+                <div className="company-name">
+                  {research.lead.organization_name}
+                </div>
+              </div>
+              
+              <div className="company-description">
+                <div className="section-title">Company Description:</div>
+                <div className="description-text">
+                  {research.companyDescription}
+                </div>
+              </div>
+              
+              {research.relevantDocumentation && (
+                <div className="documentation-section">
+                  <div className="section-title">Relevant Documentation ({research.metadata?.ragResultsCount || 0} results):</div>
+                  <div className="documentation-text">
+                    {research.relevantDocumentation}
+                  </div>
+                </div>
+              )}
+              
+              {research.leadInsights && (
+                <div className="insights-section">
+                  <div className="section-title">Lead Insights & Talking Points:</div>
+                  <div className="insights-text">
+                    {research.leadInsights}
+                  </div>
+                </div>
+              )}
+            </ResearchCard>
+          ))}
+        </LeadsGrid>
+      );
+    }
+
     // If it's leads data (array of lead objects)
     if (Array.isArray(nodeExecution.output) && nodeExecution.output.length > 0 && nodeExecution.output[0].first_name) {
       return (
@@ -428,6 +581,22 @@ const WorkflowExecutions = () => {
                 <div className="detail">
                   <span className="label">Status:</span> {lead.email_status || 'N/A'}
                 </div>
+                {lead.linkedin_url && (
+                  <div className="detail">
+                    <span className="label">LinkedIn:</span> 
+                    <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary-color)', textDecoration: 'none'}}>
+                      Profile
+                    </a>
+                  </div>
+                )}
+                {lead.account_linkedin_url && (
+                  <div className="detail">
+                    <span className="label">Company LinkedIn:</span> 
+                    <a href={lead.account_linkedin_url} target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary-color)', textDecoration: 'none'}}>
+                      Company Page
+                    </a>
+                  </div>
+                )}
               </div>
             </LeadCard>
           ))}

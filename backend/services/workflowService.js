@@ -2,6 +2,7 @@ const Workflow = require('../models/Workflow');
 const Execution = require('../models/Execution');
 const Agent = require('../models/Agent');
 const apolloService = require('./apolloService');
+const leadResearchService = require('./leadResearchService');
 
 class WorkflowService {
   // Create a new workflow
@@ -215,6 +216,8 @@ class WorkflowService {
 
       // Execute all nodes in the workflow
       const allNodes = workflow.nodes;
+      let previousNodeOutput = execution.input; // Start with initial input
+      
       for (const node of allNodes) {
         const nodeExecution = {
           nodeId: node.id,
@@ -222,7 +225,7 @@ class WorkflowService {
           nodeType: node.type,
           status: 'running',
           startedAt: new Date(),
-          input: execution.input
+          input: previousNodeOutput
         };
 
         await execution.addNodeExecution(nodeExecution);
@@ -232,10 +235,13 @@ class WorkflowService {
           let output;
           switch (node.type) {
             case 'schedule':
-              output = await this.executeScheduleNode(node, execution.input);
+              output = await this.executeScheduleNode(node, previousNodeOutput);
               break;
             case 'agent':
-              output = await this.executeAgentNode(node, execution.input);
+              output = await this.executeAgentNode(node, previousNodeOutput);
+              break;
+            case 'lead_research':
+              output = await this.executeLeadResearchNode(node, previousNodeOutput);
               break;
             default:
               throw new Error(`Unsupported node type: ${node.type}`);
@@ -247,6 +253,14 @@ class WorkflowService {
           nodeExecution.output = output;
 
           await execution.updateNodeExecution(node.id, nodeExecution);
+          
+          // Pass output to next node as input
+          previousNodeOutput = { 
+            ...previousNodeOutput, 
+            leads: output.leads || previousNodeOutput.leads,
+            researchResults: output.researchResults || previousNodeOutput.researchResults,
+            agentId: output.agentId || previousNodeOutput.agentId
+          };
         } catch (nodeError) {
           nodeExecution.status = 'failed';
           nodeExecution.completedAt = new Date();
@@ -340,6 +354,61 @@ class WorkflowService {
       };
     } catch (error) {
       console.error(`❌ Error executing agent node '${node.name}':`, error);
+      throw error;
+    }
+  }
+
+  // Execute lead research node
+  async executeLeadResearchNode(node, input) {
+    try {
+      console.log(`🔬 Executing lead research node: ${node.name}`);
+
+      // Get leads from previous node execution (typically from an agent node)
+      // For now, we'll expect leads to be passed in the input
+      const leads = input.leads || [];
+      const agentId = input.agentId; // Extract agentId from previous agent node
+      
+      if (!leads || leads.length === 0) {
+        throw new Error('Lead research node requires leads from previous node');
+      }
+
+      console.log(`📊 Processing ${leads.length} leads for research`);
+      
+      if (agentId) {
+        console.log(`🎯 Using agentId: ${agentId} for RAG filtering`);
+      }
+
+      // Get configuration from node
+      const config = node.config || {};
+      
+      const leadResearchConfig = {
+        ragLimit: config.ragLimit || 5,
+        ragThreshold: config.ragThreshold || 0.3, // Lowered from 0.7 to 0.5
+        maxConcurrent: config.maxConcurrent || 2,
+        agentId: agentId // Pass agentId to lead research service
+      };
+      
+      console.log('🔍 Lead Research Config from workflow:', leadResearchConfig);
+      console.log('🔍 Node config:', config);
+      
+      // Perform lead research
+      const researchResults = await leadResearchService.performBulkLeadResearch(leads, leadResearchConfig);
+
+      return {
+        message: `Lead research node '${node.name}' executed successfully`,
+        nodeId: node.id,
+        nodeName: node.name,
+        processedLeads: researchResults.successCount,
+        failedLeads: researchResults.failureCount,
+        totalLeads: researchResults.total,
+        researchResults: researchResults.successful,
+        failures: researchResults.failed,
+        executedAt: new Date(),
+        config: node.config,
+        input
+      };
+    } catch (error) {
+      console.error(`❌ Error executing lead research node '${node.name}':`, error);
       throw error;
     }
   }

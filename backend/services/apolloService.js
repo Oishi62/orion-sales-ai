@@ -238,7 +238,9 @@ class ApolloService {
         state: person.state,
         country: person.country,
         industry: person.organization?.industry || null,
-        company_size: person.organization?.estimated_num_employees || null
+        company_size: person.organization?.estimated_num_employees || null,
+        // Company LinkedIn URL
+        account_linkedin_url: person.organization?.linkedin_url || null
       }));
 
       console.log(`✅ Fetched ${formattedLeads.length} leads for agent ${agent._id}`);
