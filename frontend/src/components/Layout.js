@@ -21,11 +21,19 @@ const Sidebar = styled(motion.aside)`
   height: 100vh;
   z-index: 100;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   @media (max-width: 768px) {
     width: ${props => props.isOpen ? '280px' : '-280px'};
     transform: translateX(${props => props.isOpen ? '0' : '-100%'});
   }
+`;
+
+const SidebarContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 `;
 
 const MainContent = styled.main`
@@ -38,23 +46,12 @@ const MainContent = styled.main`
   }
 `;
 
-const Header = styled.header`
-  background: rgba(26, 26, 46, 0.9);
-  border-bottom: 1px solid var(--border-color);
-  padding: 1rem 2rem;
-  backdrop-filter: blur(10px);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-`;
 
 const SidebarHeader = styled.div`
   padding: 2rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
   text-align: center;
+  position: relative;
 `;
 
 const Logo = styled.h1`
@@ -111,26 +108,17 @@ const NavItem = styled(motion.div)`
 `;
 
 const UserProfile = styled.div`
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
   display: flex;
+  flex-direction: ${props => props.collapsed ? 'column' : 'row'};
   align-items: center;
-  gap: 1rem;
+  gap: ${props => props.collapsed ? '0.5rem' : '1rem'};
+  background: rgba(14, 14, 30, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 `;
 
-const Avatar = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--gradient-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: var(--primary-bg);
-  font-size: 1.1rem;
-`;
 
 const UserInfo = styled.div`
   flex: 1;
@@ -149,25 +137,29 @@ const UserInfo = styled.div`
   }
 `;
 
-const MenuToggle = styled.button`
-  background: none;
+const LogoutButton = styled.button`
   border: none;
+  background: rgba(0, 246, 255, 0.15);
   color: var(--accent-cyan);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.5rem;
+  padding: ${props => props.collapsed ? '0.4rem' : '0.45rem 0.9rem'};
   border-radius: var(--radius-md);
+  font-size: ${props => props.collapsed ? '1rem' : '0.8rem'};
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.3s ease;
+  min-width: ${props => props.collapsed ? '32px' : 'auto'};
+  height: ${props => props.collapsed ? '32px' : 'auto'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
-    background: rgba(0, 246, 255, 0.1);
-    transform: scale(1.1);
-  }
-
-  @media (min-width: 769px) {
-    display: none;
+    background: var(--accent-cyan);
+    color: var(--primary-bg);
+    box-shadow: var(--shadow-md);
   }
 `;
+
 
 const CollapseToggle = styled.button`
   background: none;
@@ -181,6 +173,7 @@ const CollapseToggle = styled.button`
   position: absolute;
   top: 1rem;
   right: 1rem;
+  z-index: 10;
 
   &:hover {
     background: rgba(0, 246, 255, 0.1);
@@ -220,11 +213,10 @@ const Layout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = [
-    { icon: '📊', text: 'Dashboard', path: '/dashboard' },
-    { icon: '🤖', text: 'Agent', path: '/agent' },
-    { icon: '🔄', text: 'Workflow', path: '/workflow' },
-    { icon: '🎯', text: 'Campaigns', path: '/campaigns' },
-    { icon: '⚙️', text: 'Settings', path: '/settings' },
+    { icon: '☰', text: 'Dashboard', path: '/dashboard' },
+    { icon: '</>', text: 'Agent', path: '/agent' },
+    { icon: '🖧', text: 'Workflow', path: '/workflow' },
+
   ];
 
   const handleLogout = () => {
@@ -246,10 +238,6 @@ const Layout = ({ children }) => {
     }
   };
 
-  const getUserInitials = (user) => {
-    if (!user) return 'U';
-    return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
-  };
 
   return (
     <LayoutContainer>
@@ -271,70 +259,47 @@ const Layout = ({ children }) => {
         animate={{ x: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <CollapseToggle onClick={toggleSidebar}>
-          {sidebarCollapsed ? '→' : '←'}
-        </CollapseToggle>
+        <SidebarContent>
+          <CollapseToggle onClick={toggleSidebar}>
+            {sidebarCollapsed ? '→' : '←'}
+          </CollapseToggle>
 
-        <SidebarHeader>
-          <Logo collapsed={sidebarCollapsed}>
-            {sidebarCollapsed ? 'SA' : 'SALES AI'}
-          </Logo>
-        </SidebarHeader>
+          <SidebarHeader>
+            <Logo collapsed={sidebarCollapsed}>
+              {sidebarCollapsed ? 'OA' : 'ORION AI'}
+            </Logo>
+          </SidebarHeader>
 
-        <NavMenu>
-          {navigationItems.map((item, index) => (
-            <NavItem
-              key={index}
-              collapsed={sidebarCollapsed}
-              className={location.pathname === item.path ? 'active' : ''}
-              onClick={() => handleNavigation(item.path)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="icon">{item.icon}</span>
-              <span className="text">{item.text}</span>
-            </NavItem>
-          ))}
-        </NavMenu>
+          <NavMenu>
+            {navigationItems.map((item, index) => (
+              <NavItem
+                key={index}
+                collapsed={sidebarCollapsed}
+                className={location.pathname === item.path ? 'active' : ''}
+                onClick={() => handleNavigation(item.path)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="icon">{item.icon}</span>
+                <span className="text">{item.text}</span>
+              </NavItem>
+            ))}
+          </NavMenu>
 
-        <UserProfile>
-          <Avatar>{getUserInitials(user)}</Avatar>
-          <UserInfo collapsed={sidebarCollapsed}>
-            <div className="name">{user?.fullName || 'User'}</div>
-            <div className="email">{user?.email}</div>
-          </UserInfo>
-          {!sidebarCollapsed && (
-            <button
-              onClick={handleLogout}
-              className="btn btn-ghost"
-              style={{ padding: '0.5rem', fontSize: '0.8rem' }}
-            >
-              Logout
-            </button>
-          )}
-        </UserProfile>
+          <UserProfile collapsed={sidebarCollapsed}>
+            <UserInfo collapsed={sidebarCollapsed}>
+              <div className="name">{user?.fullName || 'User'}</div>
+              <div className="email">{user?.email}</div>
+            </UserInfo>
+            <LogoutButton onClick={handleLogout} collapsed={sidebarCollapsed}>
+              {sidebarCollapsed ? '⏻' : 'Logout'}
+            </LogoutButton>
+          </UserProfile>
+        </SidebarContent>
       </Sidebar>
 
       <MainContent sidebarCollapsed={sidebarCollapsed}>
-        <Header>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <MenuToggle onClick={toggleMobileMenu}>
-              ☰
-            </MenuToggle>
-            <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>
-              Dashboard
-            </h2>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              Welcome, {user?.firstName}
-            </span>
-            <Avatar style={{ width: '35px', height: '35px', fontSize: '1rem' }}>
-              {getUserInitials(user)}
-            </Avatar>
-          </div>
-        </Header>
+
 
         <ContentArea>
           {children}

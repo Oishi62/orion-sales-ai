@@ -121,6 +121,8 @@ class WorkflowService {
       // Validate workflow has required nodes
       const validation = this.validateWorkflow(workflow);
       if (!validation.isValid) {
+        console.error('Workflow validation failed:', validation.errors);
+        console.error('Workflow nodes:', JSON.stringify(workflow.nodes, null, 2));
         throw new Error(`Workflow validation failed: ${validation.errors.join(', ')}`);
       }
 
@@ -501,8 +503,8 @@ class WorkflowService {
 
     // Validate schedule node configurations
     scheduleNodes.forEach(node => {
-      if (!node.config || !node.config.schedule) {
-        errors.push(`Schedule node '${node.name}' must have schedule configuration`);
+      if (!node.data || !node.data.config || !node.data.config.frequency || !node.data.config.unit) {
+        errors.push(`Schedule node '${node.name}' must have schedule configuration with frequency and unit`);
       }
     });
 

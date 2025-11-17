@@ -144,27 +144,27 @@ const AgentCreationModal = ({ isOpen, onClose, isUpdateMode = false }) => {
   const [isComplete, setIsComplete] = useState(false);
 
   const loadingMessages = isUpdateMode ? [
-    "🔄 Updating your AI Sales Agent...",
-    "🧠 Processing updated product information...",
-    "🎯 Applying new ICP filters...",
-    "📊 Reconfiguring lead scoring algorithms...",
-    "✨ Optimizing your agent with new settings...",
-    "🔍 Updating intelligent prospect research...",
-    "📧 Refreshing personalized message templates...",
-    "🚀 Enhancing outreach strategies...",
-    "⚡ Fine-tuning updated AI conversation flows...",
-    "🎉 Almost done! Finalizing updates..."
+    " Updating your AI Sales Agent...",
+    "Processing updated product information...",
+    "Applying new ICP filters...",
+    "Reconfiguring lead scoring algorithms...",
+    "Optimizing your agent with new settings...",
+    "Updating intelligent prospect research...",
+    "Refreshing personalized message templates...",
+    "Enhancing outreach strategies...",
+    "Fine-tuning updated AI conversation flows...",
+    "Almost done! Finalizing updates..."
   ] : [
-    "🤖 Initializing your AI Sales Agent...",
-    "🧠 Analyzing your product description...",
-    "🎯 Processing your ICP filters...",
-    "📊 Configuring lead scoring algorithms...",
-    "✨ Now sit back while we configure your perfect SDR...",
-    "🔍 Setting up intelligent prospect research...",
-    "📧 Preparing personalized message templates...",
-    "🚀 Optimizing outreach strategies...",
-    "⚡ Fine-tuning AI conversation flows...",
-    "🎉 Almost ready! Finalizing your agent..."
+    "Initializing your AI Sales Agent...",
+    " Analyzing your product description...",
+    " Processing your ICP filters...",
+    "Configuring lead scoring algorithms...",
+    " Now sit back while we configure your perfect SDR...",
+    "Setting up intelligent prospect research...",
+    "Preparing personalized message templates...",
+    "Optimizing outreach strategies...",
+    "Fine-tuning AI conversation flows...",
+    "Almost ready! Finalizing your agent..."
   ];
 
   useEffect(() => {
@@ -290,8 +290,8 @@ const AgentCreationModal = ({ isOpen, onClose, isUpdateMode = false }) => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   {isUpdateMode 
-                    ? '🎉 Your AI Sales Agent has been updated with the new settings. It will use the updated information for better prospect targeting.'
-                    : '🎉 Your AI Sales Agent is now ready! It will automatically research prospects, score leads, and generate personalized outreach messages.'
+                    ? ' Your AI Sales Agent has been updated with the new settings. It will use the updated information for better prospect targeting.'
+                    : ' Your AI Sales Agent is now ready! It will automatically research prospects, score leads, and generate personalized outreach messages.'
                   }
                 </SuccessMessage>
 

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
-import { useForm } from 'react-hook-form';
 import agentService from '../services/agentService';
 import documentService from '../services/documentService';
 import ragService from '../services/ragService';
@@ -93,58 +92,6 @@ const Label = styled.label`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-`;
-
-const TextArea = styled.textarea`
-  background: rgba(26, 26, 46, 0.8);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: var(--transition-normal);
-  font-family: var(--font-primary);
-  min-height: 150px;
-  resize: vertical;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-cyan);
-    box-shadow: var(--shadow-glow);
-    background: rgba(26, 26, 46, 0.9);
-  }
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  &.error {
-    border-color: var(--error-color);
-    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
-  }
-`;
-
-const OrDivider = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1rem 0;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border-color);
-  }
-
-  span {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0 1rem;
-  }
 `;
 
 const FileUploadArea = styled.div`
@@ -243,88 +190,6 @@ const SelectedFile = styled.div`
       background: rgba(255, 107, 107, 0.1);
     }
   }
-`;
-
-const Input = styled.input`
-  background: rgba(26, 26, 46, 0.8);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: var(--transition-normal);
-  font-family: var(--font-primary);
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-cyan);
-    box-shadow: var(--shadow-glow);
-    background: rgba(26, 26, 46, 0.9);
-  }
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  &.error {
-    border-color: var(--error-color);
-    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
-  }
-`;
-
-const UrlInputGroup = styled.div`
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-`;
-
-const UrlInput = styled.div`
-  flex: 1;
-`;
-
-const ScrapeButton = styled(motion.button)`
-  background: transparent;
-  color: var(--accent-cyan);
-  border: 2px solid var(--accent-cyan);
-  border-radius: var(--radius-md);
-  padding: 1rem 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-normal);
-  font-family: var(--font-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 0.9rem;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    background: var(--accent-cyan);
-    color: var(--primary-bg);
-    box-shadow: var(--shadow-glow);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-const FormErrorMessage = styled.span`
-  color: var(--error-color);
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
-`;
-
-const CharacterCount = styled.span`
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  text-align: right;
-  margin-top: 0.25rem;
 `;
 
 const ButtonGroup = styled.div`
@@ -614,8 +479,6 @@ const RAGStatus = styled.div`
 const ProductDescription = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isScraping, setIsScraping] = useState(false);
-  const [descriptionLength, setDescriptionLength] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
@@ -627,23 +490,8 @@ const ProductDescription = () => {
   const [currentAgentId, setCurrentAgentId] = useState(null);
   const [ragStatuses, setRagStatuses] = useState(new Map());
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    setValue
-  } = useForm();
-
-  const watchDescription = watch('description', '');
-  const watchUrl = watch('url', '');
-
-  React.useEffect(() => {
-    setDescriptionLength(watchDescription.length);
-  }, [watchDescription]);
-
   // Check if we're in update mode and load existing agent data
-  React.useEffect(() => {
+  useEffect(() => {
     const loadAgentData = async () => {
       try {
         setIsLoading(true);
@@ -654,18 +502,6 @@ const ProductDescription = () => {
         setCurrentAgentId(agentId);
         
         if (agentId) {
-          // Fetch existing agent data
-          const response = await agentService.getAgentById(agentId);
-          const agent = response.data.agent;
-          
-          // Populate form with existing product data
-          if (agent.product?.description) {
-            setValue('description', agent.product.description);
-          }
-          if (agent.product?.url) {
-            setValue('url', agent.product.url);
-          }
-
           // Always try to load existing documents
           loadExistingDocuments(agentId);
         }
@@ -678,7 +514,7 @@ const ProductDescription = () => {
     };
 
     loadAgentData();
-  }, [setValue]);
+  }, []);
 
   // Separate function to load existing documents
   const loadExistingDocuments = async (agentId) => {
@@ -858,52 +694,21 @@ const ProductDescription = () => {
     }
   };
 
-  const handleScrape = async () => {
-    if (!watchUrl) return;
-    
-    setIsScraping(true);
-    try {
-      // Simulate scraping
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Scraping URL:', watchUrl);
-      // Here you would typically make an API call to scrape the URL
-    } catch (error) {
-      console.error('Error scraping URL:', error);
-    } finally {
-      setIsScraping(false);
-    }
-  };
-
-  const onSubmit = async (data) => {
+  const handleNext = async (event) => {
+    event.preventDefault();
     setIsSubmitting(true);
     setError('');
     
     try {
-      // Get agent ID from session storage
       const agentId = sessionStorage.getItem('currentAgentId');
       if (!agentId) {
         throw new Error('Agent ID not found. Please start from the Agent configuration page.');
       }
-
-      // Update agent with product information
-      const productData = {
-        description: data.description
-      };
       
-      // Only include URL if it has a value
-      if (data.url && data.url.trim()) {
-        productData.url = data.url.trim();
-      }
-      
-      const response = await agentService.updateAgentProduct(agentId, productData);
-
-      console.log('Product description updated successfully:', response.data);
-      
-      // Navigate to ICP Selection page
       navigate('/icp-selection');
     } catch (error) {
-      console.error('Error updating product description:', error);
-      setError(error.message || 'Failed to update product description. Please try again.');
+      console.error('Error proceeding to next step:', error);
+      setError(error.message || 'Failed to continue. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -949,7 +754,7 @@ const ProductDescription = () => {
         <Subtitle>
           {isUpdateMode 
             ? 'Review and update your product information to help your AI agent better understand what you\'re selling.'
-            : 'Help your AI agent understand your product by providing detailed information. You can describe it manually, upload a document, or let us scrape your website.'
+            : 'Help your AI agent understand your product by providing detailed information. '
           }
         </Subtitle>
       </HeaderSection>
@@ -960,7 +765,7 @@ const ProductDescription = () => {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <FormTitle>
-          {isUpdateMode ? '✏️ Update Product Information' : '📋 Product Information'}
+          {isUpdateMode ? ' Update Product Information' : ' Product Information'}
         </FormTitle>
         <FormDescription>
           {isUpdateMode 
@@ -969,7 +774,7 @@ const ProductDescription = () => {
           }
         </FormDescription>
 
-        <Form onSubmit={handleSubmit(onSubmit)}>
+        <Form onSubmit={handleNext}>
           {error && (
             <ErrorMessage
               initial={{ opacity: 0, y: -10 }}
@@ -981,36 +786,11 @@ const ProductDescription = () => {
           )}
           
           <FormGroup>
-            <Label htmlFor="description">
-              ✍️ Describe Your Product
-            </Label>
-            <TextArea
-              id="description"
-              placeholder="Describe your product or service in detail. Include key features, benefits, target audience, pricing, and what makes it unique. For example: 'Our project management software helps remote teams collaborate efficiently with real-time updates, task automation, and integrated video calls. Starting at $29/month per user, it's perfect for teams of 5-50 people who need better organization and communication.'"
-              className={errors.description ? 'error' : ''}
-              {...register('description', {
-                maxLength: {
-                  value: 2000,
-                  message: 'Description cannot exceed 2000 characters'
-                }
-              })}
-            />
-            <CharacterCount>
-              {descriptionLength}/2000 characters
-            </CharacterCount>
-            {errors.description && <FormErrorMessage>{errors.description.message}</FormErrorMessage>}
-          </FormGroup>
-
-          <OrDivider>
-            <span>Or</span>
-          </OrDivider>
-
-          <FormGroup>
             <Label>
-              📄 Upload Product Document
+               Upload Product Document
             </Label>
             <FileUploadArea
-              className={`${dragOver ? 'dragover' : ''} ${errors.file ? 'error' : ''}`}
+              className={`${dragOver ? 'dragover' : ''}`}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -1067,7 +847,7 @@ const ProductDescription = () => {
             {uploadedDocuments.length > 0 && (
               <UploadedDocumentsList>
                 <UploadedDocumentsTitle>
-                  📚 Uploaded Documents ({uploadedDocuments.length})
+                   Uploaded Documents ({uploadedDocuments.length})
                 </UploadedDocumentsTitle>
                 {uploadedDocuments.map((document) => {
                   const ragStatus = getDocumentRAGStatus(document._id);
@@ -1173,50 +953,6 @@ const ProductDescription = () => {
                 })}
               </UploadedDocumentsList>
             )}
-            {errors.file && <FormErrorMessage>{errors.file.message}</FormErrorMessage>}
-          </FormGroup>
-
-          <OrDivider>
-            <span>Or</span>
-          </OrDivider>
-
-          <FormGroup>
-            <Label htmlFor="url">
-              🌐 Scrape from Website
-            </Label>
-            <UrlInputGroup>
-              <UrlInput>
-                <Input
-                  id="url"
-                  type="url"
-                  placeholder="https://yourwebsite.com/product-page"
-                  className={errors.url ? 'error' : ''}
-                  {...register('url', {
-                    pattern: {
-                      value: /^https?:\/\/.+/,
-                      message: 'Please enter a valid URL starting with http:// or https://'
-                    }
-                  })}
-                />
-                {errors.url && <FormErrorMessage>{errors.url.message}</FormErrorMessage>}
-              </UrlInput>
-              <ScrapeButton
-                type="button"
-                onClick={handleScrape}
-                disabled={!watchUrl || isScraping}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {isScraping ? (
-                  <>
-                    <div className="loading" />
-                    Scraping...
-                  </>
-                ) : (
-                  'Scrape'
-                )}
-              </ScrapeButton>
-            </UrlInputGroup>
           </FormGroup>
 
           <ButtonGroup>

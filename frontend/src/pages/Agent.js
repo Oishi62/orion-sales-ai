@@ -178,32 +178,6 @@ const TextArea = styled.textarea`
   }
 `;
 
-const Select = styled.select`
-  background: rgba(26, 26, 46, 0.85);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: var(--transition-normal);
-  font-family: var(--font-primary);
-  appearance: none;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-cyan);
-    box-shadow: var(--shadow-glow);
-    background: rgba(26, 26, 46, 0.95);
-  }
-
-  &.error {
-    border-color: var(--error-color);
-    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
-  }
-`;
-
-
 const FormErrorMessage = styled.span`
   color: var(--error-color);
   font-size: 0.9rem;
@@ -640,8 +614,6 @@ const Agent = () => {
   const workflowSteps = [
     'Product Description',
     'ICP Selection',
-    'Lead Research',
-    'Message Generation'
   ];
 
   return (
@@ -668,7 +640,7 @@ const Agent = () => {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <FormTitle>
-          {isUpdateMode ? '✏️ Update Agent Details' : '🤖 Agent Configuration'}
+          {isUpdateMode ? ' Update Agent Details' : ' Agent Configuration'}
         </FormTitle>
         <FormDescription>
           {isUpdateMode 
@@ -690,7 +662,7 @@ const Agent = () => {
           
           <FormGroup>
             <Label htmlFor="name">
-              🏷️ Agent Name
+               Agent Name
             </Label>
             <Input
               id="name"
@@ -714,7 +686,7 @@ const Agent = () => {
 
           <FormGroup>
             <Label htmlFor="description">
-              📝 Agent Description
+               Agent Description
             </Label>
             <TextArea
               id="description"
@@ -767,7 +739,7 @@ const Agent = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <WorkflowTitle>
-            ⚡ What happens next?
+             What happens next?
           </WorkflowTitle>
           <WorkflowSteps>
             {workflowSteps.map((step, index) => (
@@ -791,7 +763,7 @@ const Agent = () => {
             >
               <ExistingAgentsCard>
                 <ExistingAgentsTitle>
-                  🤖 Your Agents ({existingAgents.length})
+                   Your Agents ({existingAgents.length})
                 </ExistingAgentsTitle>
                 
                 <AgentsList>
@@ -838,7 +810,7 @@ const Agent = () => {
             >
               <ExistingAgentsCard>
                 <ExistingAgentsTitle>
-                  🤖 Your Agents
+                   Your Agents
                 </ExistingAgentsTitle>
                 <LoadingSpinner />
               </ExistingAgentsCard>
@@ -854,7 +826,7 @@ const Agent = () => {
             >
               <ExistingAgentsCard>
                 <ExistingAgentsTitle>
-                  🤖 Your Agents
+                   Your Agents
                 </ExistingAgentsTitle>
                 <EmptyState>
                   <p>No agents created yet.</p>

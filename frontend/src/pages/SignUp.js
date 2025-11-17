@@ -278,7 +278,7 @@ const SignUp = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Logo>SALES AI</Logo>
+        <Logo>ORION AI</Logo>
         <Subtitle>Join the future of sales automation</Subtitle>
 
         <Form onSubmit={handleSubmit(onSubmit)}>

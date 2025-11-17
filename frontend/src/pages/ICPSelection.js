@@ -722,7 +722,7 @@ const ICPSelection = () => {
         revenueType,
         revenueMin: revenueMin ? parseFloat(revenueMin) : undefined,
         revenueMax: revenueMax ? parseFloat(revenueMax) : undefined,
-        employeeRange,
+        employeeRange: employeeRange || undefined,
         fundingStages,
         companyTypes,
         jobTitlesTab,
@@ -862,7 +862,7 @@ const ICPSelection = () => {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <FilterTitle>
-          {isUpdateMode ? '✏️ Update Target Filters' : '🎯 Target Filters'}
+          {isUpdateMode ? ' Update Target Filters' : ' Target Filters'}
         </FilterTitle>
         <FilterDescription>
           {isUpdateMode 
@@ -884,7 +884,7 @@ const ICPSelection = () => {
         <FiltersGrid>
           {/* Job Titles */}
           <MultiSelectDropdown
-            label="👔 Job Titles"
+            label=" Job Titles"
             placeholder="Include titles"
             options={jobTitleOptions}
             selectedItems={jobTitles}
@@ -907,7 +907,7 @@ const ICPSelection = () => {
 
           {/* Company */}
           <MultiSelectDropdown
-            label="🏢 Company"
+            label=" Company"
             placeholder="Include companies"
             options={companyOptions}
             selectedItems={companies}
@@ -928,7 +928,7 @@ const ICPSelection = () => {
 
           {/* Location */}
           <MultiSelectDropdown
-            label="📍 Location"
+            label=" Location"
             placeholder="Include locations"
             options={locationOptions}
             selectedItems={locations}
@@ -950,7 +950,7 @@ const ICPSelection = () => {
           {/* Number of Employees */}
           <FilterGroup>
             <FilterLabel>
-              👥 # Employees
+               # of Employees
             </FilterLabel>
             <Select 
               value={employeeRange} 
@@ -966,7 +966,7 @@ const ICPSelection = () => {
           {/* Revenue */}
           <FilterGroup>
             <FilterLabel>
-              💰 Revenue
+               Revenue
             </FilterLabel>
             <RevenueOptions>
               {revenueOptions.map((option) => (
@@ -1028,7 +1028,7 @@ const ICPSelection = () => {
 
           {/* Funding */}
           <MultiSelectDropdown
-            label="💸 Funding"
+            label=" Funding"
             placeholder="Select funding stages"
             options={fundingOptions}
             selectedItems={fundingStages}
@@ -1051,7 +1051,7 @@ const ICPSelection = () => {
         {/* Messaging Style Section */}
         <FilterGroup style={{ marginTop: '2rem' }}>
           <FilterLabel>
-            💬 Messaging Style (Optional)
+             Messaging Style (Optional)
           </FilterLabel>
           <HelpText style={{ marginBottom: '1rem' }}>
             Define the tone, style, and approach your AI agent should use when communicating with prospects. 

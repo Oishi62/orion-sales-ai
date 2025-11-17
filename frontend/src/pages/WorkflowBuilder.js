@@ -84,7 +84,7 @@ const AgentNode = ({ data, selected, id }) => {
       />
       
       <NodeHeader>
-        <NodeIcon>🤖</NodeIcon>
+        <NodeIcon>⚙️</NodeIcon>
         <NodeTitle>{data.name || 'Agent'}</NodeTitle>
         <NodeBadge nodeType="agent">AGENT</NodeBadge>
         <DeleteButton onClick={(e) => {
@@ -134,7 +134,7 @@ const LeadResearchNode = ({ data, selected, id }) => {
       />
       
       <NodeHeader>
-        <NodeIcon>🔬</NodeIcon>
+        <NodeIcon>🔍</NodeIcon>
         <NodeTitle>Lead Research</NodeTitle>
         <NodeBadge nodeType="lead_research">RESEARCH</NodeBadge>
         <DeleteButton onClick={(e) => {
@@ -241,6 +241,8 @@ const WorkflowBuilder = () => {
     maxConcurrent: 2
   });
   const [availableAgents, setAvailableAgents] = useState([]);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempWorkflowName, setTempWorkflowName] = useState('');
 
   // Available node types for the palette
   const nodeLibrary = [
@@ -253,7 +255,7 @@ const WorkflowBuilder = () => {
     },
     {
       type: 'lead_research',
-      icon: '🔬',
+      icon: '🔍',
       name: 'Lead Research',
       description: 'Research leads using AI and RAG system',
       category: 'ACTIONS'
@@ -436,6 +438,32 @@ const WorkflowBuilder = () => {
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
   }, [setNodes, setEdges]);
 
+  // Handle workflow name editing
+  const handleNameClick = () => {
+    setTempWorkflowName(workflow.name);
+    setIsEditingName(true);
+  };
+
+  const handleNameSave = () => {
+    if (tempWorkflowName.trim()) {
+      setWorkflow(prev => ({ ...prev, name: tempWorkflowName.trim() }));
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameCancel = () => {
+    setTempWorkflowName('');
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleNameSave();
+    } else if (e.key === 'Escape') {
+      handleNameCancel();
+    }
+  };
+
   // Save node configuration
   const saveNodeConfig = () => {
     if (!selectedNodeForConfig) return;
@@ -518,7 +546,7 @@ const WorkflowBuilder = () => {
         </BackButton>
         <Title>Workflow</Title>
         <SaveButton onClick={saveWorkflow}>
-          💾 Save
+          Save
         </SaveButton>
       </Header>
 
@@ -553,7 +581,7 @@ const WorkflowBuilder = () => {
                 onClick={() => addNode('agent', agent)}
                 disabled={!agent.hasApolloConfig}
               >
-                <NodeIcon>🤖</NodeIcon>
+                <NodeIcon>➜</NodeIcon>
                 <div>
                   <NodeName>{agent.name}</NodeName>
                   <NodeDesc>
@@ -585,7 +613,21 @@ const WorkflowBuilder = () => {
             <MiniMap />
             <Background variant="dots" gap={12} size={1} />
             <Panel position="top-center">
-              <WorkflowTitle>{workflow.name}</WorkflowTitle>
+              {isEditingName ? (
+                <WorkflowNameInput
+                  type="text"
+                  value={tempWorkflowName}
+                  onChange={(e) => setTempWorkflowName(e.target.value)}
+                  onBlur={handleNameSave}
+                  onKeyDown={handleNameKeyPress}
+                  autoFocus
+                  placeholder="Enter workflow name"
+                />
+              ) : (
+                <WorkflowTitle onClick={handleNameClick} title="Click to edit">
+                  {workflow.name}
+                </WorkflowTitle>
+              )}
             </Panel>
           </ReactFlow>
         </FlowContainer>
@@ -928,6 +970,30 @@ const WorkflowTitle = styled.div`
   padding: 0.5rem 1rem;
   color: var(--text-primary);
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--accent-cyan);
+    background: rgba(0, 246, 255, 0.05);
+  }
+`;
+
+const WorkflowNameInput = styled.input`
+  background: var(--secondary-bg);
+  border: 2px solid var(--accent-cyan);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  min-width: 200px;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
 `;
 
 // Node Components Styling

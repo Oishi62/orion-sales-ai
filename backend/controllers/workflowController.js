@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const workflowService = require('../services/workflowService');
+const Execution = require('../models/Execution');
 
 // @desc    Create new workflow
 // @route   POST /api/workflows
@@ -68,10 +69,11 @@ const getWorkflows = async (req, res) => {
       limit: parseInt(limit)
     });
 
-    res.json({
-      success: true,
-      data: {
-        workflows: workflows.map(workflow => ({
+    // Get actual execution counts from the database
+    const workflowsWithExecutionCounts = await Promise.all(
+      workflows.map(async (workflow) => {
+        const totalExecutions = await Execution.countDocuments({ workflowId: workflow._id });
+        return {
           id: workflow._id,
           name: workflow.name,
           description: workflow.description,
@@ -79,12 +81,19 @@ const getWorkflows = async (req, res) => {
           nodeCount: workflow.nodes.length,
           connectionCount: workflow.connections.length,
           successRate: workflow.successRate,
-          totalExecutions: workflow.stats.totalExecutions,
+          totalExecutions,
           lastExecutedAt: workflow.stats.lastExecutedAt,
           nextScheduledAt: workflow.stats.nextScheduledAt,
           createdAt: workflow.createdAt,
           updatedAt: workflow.updatedAt
-        })),
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        workflows: workflowsWithExecutionCounts,
         total: workflows.length
       }
     });

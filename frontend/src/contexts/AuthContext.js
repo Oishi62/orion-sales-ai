@@ -190,7 +190,7 @@ export const AuthProvider = ({ children }) => {
           payload: { user, token }
         });
         
-        toast.success(`Welcome to Sales AI, ${user.firstName}!`);
+        toast.success(`Welcome to Orion AI, ${user.firstName}!`);
         return { success: true };
       } else {
         throw new Error(response.message || 'Sign up failed');

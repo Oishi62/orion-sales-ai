@@ -171,19 +171,6 @@ const StyledLink = styled(Link)`
   }
 `;
 
-const ForgotPassword = styled(Link)`
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.9rem;
-  text-align: center;
-  display: block;
-  margin-top: 1rem;
-  transition: var(--transition-fast);
-
-  &:hover {
-    color: var(--accent-cyan);
-  }
-`;
 
 const SignIn = () => {
   const { signIn, isLoading, isAuthenticated } = useAuth();
@@ -246,7 +233,7 @@ const SignIn = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Logo>SALES AI</Logo>
+        <Logo>ORION AI</Logo>
         <Subtitle>Welcome back to the future of sales</Subtitle>
 
         <Form onSubmit={handleSubmit(onSubmit)}>
@@ -308,9 +295,7 @@ const SignIn = () => {
             )}
           </SubmitButton>
 
-          <ForgotPassword to="/forgot-password">
-            Forgot your password?
-          </ForgotPassword>
+
         </Form>
 
         <LinkContainer>
