@@ -21,16 +21,22 @@ class OpenAIService {
 
       console.log(`🔍 Getting company description for ${companyName} from ${companyLinkedInUrl}`);
 
-      const prompt = `Please search the web for information about the company "${companyName}" and their LinkedIn page: ${companyLinkedInUrl}
+      const prompt = `## **Role**
+Please search the web for information about the company "${companyName}" and their LinkedIn page: ${companyLinkedInUrl}
 
-Based on your web search results, provide a comprehensive company description that includes:
-1. What the company does (products/services)
-2. Their industry and market focus
-3. Key business areas or specializations
+## **Context**
+You will use web search to gather current and accurate information about the company.
 
-Use web search to find current and accurate information about this company.
+## **Guidelines**
+1. Provide a comprehensive company description that includes:
+   - What the company does (products/services)
+   - Their industry and market focus
+   - Key business areas or specializations
 
-Keep the description concise but informative, around 1-2 paragraphs.`;
+2. Use web search to find current and accurate information about this company.
+
+3. Keep the description concise but informative, around 1–2 paragraphs.
+`;
 
 const response = await this.openai.responses.create({
     model: "gpt-5",
@@ -63,11 +69,40 @@ const response = await this.openai.responses.create({
    * @returns {string} Formatted prompt for RAG querying
    */
   generateRagPrompt(companyName, companyDescription) {
-    return `The lead's company is a ${companyName} company described as:
-"${companyDescription}".
+    return `## **Role**
+You are an AI assistant specialized in **mapping a company’s profile to the most relevant parts of our product documentation**.
+Your responsibility is to read the company description and retrieve only those product features, benefits, or use cases that directly match the company’s industry, business model, problems, or workflows.
 
-Based on this context, retrieve the parts of our product documentation that 
-explain features, benefits, or use cases relevant to this type of company.`;
+## **Context**
+- The lead’s company is a **${companyName}** company.
+- It is described as:
+  **"${companyDescription}"**
+- You also have access to **our product documentation**, which contains detailed explanations of product features, benefits, and use cases across multiple industries and scenarios.
+
+Your task is to interpret the company description and identify which parts of the product documentation align with:
+- the company’s industry,
+- its operations,
+- its inferred challenges,
+- its goals or workflows.
+
+## **Guidelines**
+1. **Retrieve Only Relevant Information**
+   - Pull only the sections of our product documentation that directly relate to what this type of company may care about.
+   - Ignore generic or unrelated product features.
+
+2. **Interpret, Don’t Copy Blindly**
+   - Understand the company’s profile and infer which product features would matter most.
+   - Prioritize relevance over quantity.
+
+3. **Focus on Value & Use Cases**
+   - Highlight benefits and use cases tailored to this company’s type.
+   - Include any workflow improvements or industry-specific value propositions.
+
+4. **No Extra Analysis**
+   - Your output should include **only** the documentation excerpts or summaries relevant to this company.
+   - Do not invent new features not found in the documentation.
+
+`;
   }
 
   /**
@@ -80,22 +115,21 @@ explain features, benefits, or use cases relevant to this type of company.`;
     try {
       console.log(`🧠 Generating lead insights for ${leadData.name} at ${leadData.organization_name}`);
 
-      const prompt = `You are a Lead Research Agent.
-
+      const prompt = `## **Role**
 You are a Lead Research Agent.
 
-Here is the company data from Apollo:
+## **Context**
+Here is the company data from Apollo:  
 ${JSON.stringify(leadData, null, 2)}
 
-Here are relevant parts of our product, retrieved via Qdrant:
+Here are relevant parts of our product, retrieved via Qdrant:  
 ${relevantDocumentation}
 
-Your tasks:
-
+## **Guidelines**
 1. Perform a **web search** to find recent and relevant information on the company, such as:
-   - Recent announcements, press releases, or product launches  
-   - Funding news, acquisitions, or partnerships  
-   - Market expansion, leadership changes, or strategic pivots  
+   - Recent announcements, press releases, or product launches
+   - Funding news, acquisitions, or partnerships
+   - Market expansion, leadership changes, or strategic pivots
 
 2. Summarize **what the company does**, including its business model, key markets, and customers.
 
@@ -104,13 +138,14 @@ Your tasks:
 4. Link these inferred challenges to our product’s relevant capabilities (from the Qdrant documentation), explaining how our product can provide value in their context.
 
 5. Generate **3–5 personalized insights or angles** for cold email outreach. These should leverage:
-   - Their business context  
-   - Recent news or triggers  
-   - Strategic alignment with our product  
+   - Their business context
+   - Recent news or triggers
+   - Strategic alignment with our product
 
 6. Provide **3 specific talking points** that can be used in an outbound email. Make them brief and actionable, focusing on how we can help them right now based on their recent developments.
 
-Please structure your response clearly with numbered sections for each task.`;
+Please structure your response clearly with numbered sections for each task.
+`;
 
       const response = await this.openai.responses.create({
         model: "gpt-5",
