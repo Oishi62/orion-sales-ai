@@ -3,7 +3,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 class GeminiService {
   constructor() {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
 
   /**
@@ -39,30 +39,32 @@ class GeminiService {
    * @returns {string} The formatted prompt
    */
   buildEmailDraftPrompt(leadData, leadInsights, messagingStyle = null, agentName = 'Sales Agent') {
-    let prompt = `You are a professional sales email writer acting as "${agentName}". Based on the lead information and research insights provided, draft a personalized cold outreach email.
+    let prompt = `
+    ## **Role**
+    You are a professional sales email writer acting as "${agentName}". Based on the lead information and research insights provided, draft a personalized cold outreach email.
 
-LEAD INFORMATION:
+## **Lead Information**
 - Name: ${leadData.first_name} ${leadData.last_name}
 - Title: ${leadData.title}
 - Company: ${leadData.organization_name}
 - LinkedIn: ${leadData.linkedin_url}
 
-RESEARCH INSIGHTS:
+## **Research Insights**
 ${leadInsights}`;
 
     // Add messaging style if provided
     if (messagingStyle && messagingStyle.trim()) {
       prompt += `
 
-MESSAGING STYLE EXAMPLE:
+## **Messaging Style Example**
 Use this as a reference for tone, style, and approach (but don't copy it exactly):
 ${messagingStyle}`;
     }
 
     prompt += `
 
-INSTRUCTIONS:
-1. Write a professional, personalized cold email making sure to address the lead by name.
+## **Critical Guidelines**
+1. Write a professional, personalized cold email making sure to address the **lead by name**.
 2. Use the research insights to make it relevant and compelling
 3. Keep it concise (150-200 words max)
 4. Include a clear value proposition
@@ -76,7 +78,7 @@ INSTRUCTIONS:
 
     prompt += `
 
-FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
+## **Format Your Response Exactly As Follows**
 SUBJECT: [Your email subject line here]
 
 BODY:
